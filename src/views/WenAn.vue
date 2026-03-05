@@ -97,11 +97,11 @@ const generateWenAn = async () => {
   }, 500)
 
   try {
-    const res = await axios.post('/chat', {
-      message: theme.value,
-      mode: 'wenan',
-      style: style.value,
-    })
+    const res = await axios.post('https://qianwen-ai-production.up.railway.app/chat', {
+  message: theme.value,
+  mode: 'wenan',
+  style: style.value
+})
 
     const reply = res.data.reply || ''
     wenAnList.value = reply.split('\n\n').filter(Boolean)
