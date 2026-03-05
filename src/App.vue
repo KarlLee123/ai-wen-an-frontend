@@ -1,56 +1,47 @@
 <template>
-  <div class="home-page">
+  <div class="wenan-page">
     <h1>AI 文案小助手</h1>
-    <p>输入主题，一键生成文案。免费试用 3 次</p>
+    <p class="tip">输入主题，一键生成适合小红书、朋友圈、抖音的爆款文案～ 免费试用 3 次</p>
 
     <el-input
       v-model="theme"
-      placeholder="输入主题或关键词（例如：卖咖啡、東京旅行）"
-      style="margin-bottom: 16px; width: 100%; max-width: 600px"
+      placeholder="请输入主题或关键词（例如：卖咖啡、東京旅行、失恋安慰）"
     />
 
-    <el-select
-      v-model="style"
-      placeholder="选择风格"
-      style="width: 100%; max-width: 600px; margin-bottom: 16px"
-    >
+    <el-select v-model="style" placeholder="选择风格">
       <el-option label="默认（自然亲切）" value="自然亲切" />
       <el-option label="温柔治愈风" value="温柔治愈" />
       <el-option label="毒舌搞笑风" value="毒舌搞笑" />
       <el-option label="专业干货风" value="专业干货" />
+      <el-option label="日式冷幽默风" value="日式冷幽默" />
     </el-select>
 
     <el-button
       type="primary"
       :loading="loading"
       :disabled="remaining <= 0"
-      @click="generate"
-      style="width: 100%; max-width: 600px; height: 52px; font-size: 18px"
+      @click="generateWenAn"
     >
-      {{ loading ? '正在生成...' : '一键生成文案' }}
+      {{ loading ? '正在生成文案...' : '一键生成' }}
     </el-button>
 
-    <div style="margin-top: 20px; text-align: center">
-      <p v-if="remaining > 0" style="color: #67c23a">剩余免费次数：{{ remaining }} 次</p>
-      <p v-else style="color: #f56c6c">免费次数已用完！后续可付费无限生成</p>
+    <div class="status">
+      <p v-if="remaining > 0" class="remaining">剩余免费次数：{{ remaining }} 次</p>
+      <p v-else class="warning">
+        免费次数已用完！付费解锁无限生成（9.9 元/月）
+        <el-button type="danger" size="small" @click="toPay">立即付费</el-button>
+      </p>
     </div>
 
-    <div v-if="loading" style="text-align: center; margin: 30px 0">
+    <div v-if="loading" class="loading">
       <el-spinner />
-      <p>请稍等 5–10 秒...</p>
+      <p>AI 正在创作，请稍等 5–10 秒...</p>
     </div>
 
-    <div
-      v-if="wenAnList.length > 0"
-      style="margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto"
-    >
+    <div v-if="wenAnList.length > 0" class="result">
       <h3>生成的文案</h3>
-      <div
-        v-for="(item, index) in wenAnList"
-        :key="index"
-        style="background: #f5f7fa; padding: 20px; margin-bottom: 20px; border-radius: 12px"
-      >
-        <pre style="white-space: pre-wrap; margin: 0">{{ item }}</pre>
+      <div v-for="(item, index) in wenAnList" :key="index" class="card">
+        <pre class="content">{{ item }}</pre>
       </div>
     </div>
   </div>
@@ -67,13 +58,13 @@ const wenAnList = ref([])
 const loading = ref(false)
 const remaining = ref(3)
 
-const generate = async () => {
+const generateWenAn = async () => {
   if (remaining.value <= 0) {
-    ElMessage.info('免费次数用完，后续可付费哦～')
+    toPay()
     return
   }
   if (!theme.value.trim()) {
-    ElMessage.warning('请输入主题或关键词')
+    ElMessage.warning('请输入主题或关键词哦～')
     return
   }
 
@@ -81,41 +72,84 @@ const generate = async () => {
   wenAnList.value = []
 
   try {
-    const res = await axios.post('/chat', {
+    const res = await axios.post('https://qianwen-ai-production.up.railway.app/chat', {
       message: theme.value,
       mode: 'wenan',
-      style: style.value,
+      style: style.value
     })
 
     const reply = res.data.reply || ''
     wenAnList.value = reply.split('\n\n').filter(Boolean)
-    remaining.value = res.data.remaining ?? remaining.value - 1
+    remaining.value = res.data.remaining !== undefined ? res.data.remaining : remaining.value - 1
   } catch (err) {
-    ElMessage.error('生成失败：' + (err.response?.data?.error || err.message || '网络问题'))
+    console.error('生成错误：', err)
+    ElMessage.error('生成失败：' + (err.response?.data?.message || err.message || '网络异常'))
   } finally {
     loading.value = false
   }
 }
+
+const toPay = () => {
+  ElMessage.info('支付功能开发中... 实际接入微信支付，金额 9.9 元/月')
+}
 </script>
 
 <style scoped>
-.home-page {
+.wenan-page {
   max-width: 800px;
   margin: 40px auto;
   padding: 30px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
 h1 {
-  color: #409eff;
-  margin-bottom: 16px;
+  text-align: center;
+  color: #303133;
 }
 
 .tip {
-  color: #606266;
+  text-align: center;
+  color: #909399;
   margin-bottom: 32px;
+}
+
+.status {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.remaining {
+  color: #67c23a;
+  font-weight: bold;
+}
+
+.warning {
+  color: #f56c6c;
+}
+
+.loading {
+  text-align: center;
+  margin: 40px 0;
+  color: #409eff;
+}
+
+.result {
+  margin-top: 40px;
+}
+
+.card {
+  background: #f5f7fa;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  border-left: 5px solid #409eff;
+}
+
+.content {
+  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.8;
 }
 </style>
