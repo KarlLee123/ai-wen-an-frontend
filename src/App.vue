@@ -1,5 +1,5 @@
 <template>
-  <div class="wenan-page">
+  <div class="wenan-container">
     <h1>AI 文案小助手</h1>
     <p class="tip">输入主题，一键生成适合小红书、朋友圈、抖音的爆款文案～ 免费试用 3 次</p>
 
@@ -8,7 +8,7 @@
       placeholder="请输入主题或关键词（例如：卖咖啡、東京旅行、失恋安慰）"
     />
 
-    <el-select v-model="style" placeholder="选择风格">
+    <el-select v-model="style" placeholder="选择文案风格">
       <el-option label="默认（自然亲切）" value="自然亲切" />
       <el-option label="温柔治愈风" value="温柔治愈" />
       <el-option label="毒舌搞笑风" value="毒舌搞笑" />
@@ -76,14 +76,26 @@ const generateWenAn = async () => {
       message: theme.value,
       mode: 'wenan',
       style: style.value
+    }, {
+      timeout: 90000  // 超时90秒，防唤醒慢
     })
 
     const reply = res.data.reply || ''
     wenAnList.value = reply.split('\n\n').filter(Boolean)
     remaining.value = res.data.remaining !== undefined ? res.data.remaining : remaining.value - 1
   } catch (err) {
-    console.error('生成错误：', err)
-    ElMessage.error('生成失败：' + (err.response?.data?.message || err.message || '网络异常'))
+    console.error('生成错误详情：', err)
+    let errorMsg = '生成失败，请稍后再试';
+    if (err.code === 'ECONNABORTED') {
+      errorMsg = '请求超时，后端可能刚启动，请再试一次（唤醒需30–60秒）';
+    } else if (err.response) {
+      errorMsg = err.response.data?.message || err.response.statusText || '后端返回错误 ' + err.response.status;
+    } else if (err.request) {
+      errorMsg = '网络连接失败，后端服务可能休眠或网络问题，请再试一次';
+    } else {
+      errorMsg = err.message || '请求发送失败';
+    }
+    ElMessage.error(errorMsg)
   } finally {
     loading.value = false
   }
@@ -95,29 +107,34 @@ const toPay = () => {
 </script>
 
 <style scoped>
-.wenan-page {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 30px;
+.wenan-container {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 40px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
 h1 {
   text-align: center;
-  color: #303133;
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  font-weight: bold;
 }
 
 .tip {
   text-align: center;
-  color: #909399;
-  margin-bottom: 32px;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
 }
 
 .status {
   text-align: center;
-  margin: 24px 0;
+  margin: 30px 0;
+  font-size: 1.1rem;
 }
 
 .remaining {
@@ -126,30 +143,40 @@ h1 {
 }
 
 .warning {
-  color: #f56c6c;
+  color: #e74c3c;
+  font-weight: bold;
 }
 
 .loading {
   text-align: center;
-  margin: 40px 0;
+  margin: 50px 0;
   color: #409eff;
+  font-size: 1.1rem;
 }
 
 .result {
-  margin-top: 40px;
+  margin-top: 50px;
 }
 
 .card {
-  background: #f5f7fa;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 12px;
-  border-left: 5px solid #409eff;
+  background: white;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+  border-left: 6px solid #409eff;
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
 }
 
 .content {
   white-space: pre-wrap;
   margin: 0;
-  line-height: 1.8;
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: #2c3e50;
 }
 </style>
