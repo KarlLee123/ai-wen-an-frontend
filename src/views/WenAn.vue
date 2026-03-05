@@ -75,7 +75,7 @@ const generateWenAn = async () => {
   wenAnList.value = []
 
   try {
-    const res = await axios.post('https://qianwen-ai-production.up.railway.app/chat', {
+    const res = await axios.post('http://175.24.207.152:8080/chat', {
       message: theme.value,
       mode: 'wenan',
       style: style.value
