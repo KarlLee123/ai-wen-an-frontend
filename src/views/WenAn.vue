@@ -68,14 +68,12 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { Edit, Clock, Warning, CopyDocument } from '@element-plus/icons-vue'
 
 const theme = ref('')
 const style = ref('自然亲切')
 const wenAnList = ref([])
 const loading = ref(false)
 const remaining = ref(3)
-const loadingProgress = ref(0)
 
 const generateWenAn = async () => {
   if (remaining.value <= 0) {
@@ -89,49 +87,41 @@ const generateWenAn = async () => {
 
   loading.value = true
   wenAnList.value = []
-  loadingProgress.value = 0
-
-  const interval = setInterval(() => {
-    loadingProgress.value += 10
-    if (loadingProgress.value >= 90) clearInterval(interval)
-  }, 500)
 
   try {
     const res = await axios.post('https://qianwen-ai-production.up.railway.app/chat', {
-  message: theme.value,
-  mode: 'wenan',
-  style: style.value
-})
+      message: theme.value,
+      mode: 'wenan',
+      style: style.value
+    }, {
+      timeout: 60000  // 设置60秒超时，防止唤醒太慢直接失败
+    })
 
     const reply = res.data.reply || ''
     wenAnList.value = reply.split('\n\n').filter(Boolean)
     remaining.value = res.data.remaining !== undefined ? res.data.remaining : remaining.value - 1
   } catch (err) {
-    ElMessage.error('生成失败：' + (err.response?.data?.error || err.message || '网络异常'))
+    console.error('生成失败完整错误：', err)  // 控制台看详细错误
+    let errorMsg = '未知错误，请稍后再试';
+    if (err.code === 'ECONNABORTED') {
+      errorMsg = '请求超时，后端服务可能刚启动，请再试一次（免费层唤醒需要30秒）';
+    } else if (err.response) {
+      errorMsg = err.response.data?.message || err.response.statusText || '后端返回错误 ' + err.response.status;
+    } else if (err.request) {
+      errorMsg = '网络连接失败，可能后端服务休眠或网络问题，请再试一次';
+    } else {
+      errorMsg = err.message || '请求发送失败';
+    }
+    ElMessage.error('生成失败：' + errorMsg)
   } finally {
     loading.value = false
-    loadingProgress.value = 100
-    setTimeout(() => (loadingProgress.value = 0), 500)
-    clearInterval(interval)
   }
-}
-
-const copyText = (text) => {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      ElMessage.success('已复制到剪贴板')
-    })
-    .catch(() => {
-      ElMessage.error('复制失败，请手动复制')
-    })
 }
 
 const toPay = () => {
   ElMessage.info('支付功能开发中... 实际接入微信支付，金额 9.9 元/月')
 }
 </script>
-
 <style scoped>
 .wenan-page {
   min-height: 100vh;
