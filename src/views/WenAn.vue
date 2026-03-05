@@ -89,26 +89,26 @@ const generateWenAn = async () => {
   wenAnList.value = []
 
   try {
-    const res = await axios.post('https://qianwen-ai-production.up.railway.app/chat', {
+    const res = await axios.post('https://01-production-1c33.up.railway.app/chat', {
       message: theme.value,
       mode: 'wenan',
       style: style.value
     }, {
-      timeout: 60000  // 设置60秒超时，防止唤醒太慢直接失败
+      timeout: 60000  // 超时60秒，防止唤醒慢
     })
 
     const reply = res.data.reply || ''
     wenAnList.value = reply.split('\n\n').filter(Boolean)
     remaining.value = res.data.remaining !== undefined ? res.data.remaining : remaining.value - 1
   } catch (err) {
-    console.error('生成失败完整错误：', err)  // 控制台看详细错误
+    console.error('生成错误详情：', err)
     let errorMsg = '未知错误，请稍后再试';
     if (err.code === 'ECONNABORTED') {
-      errorMsg = '请求超时，后端服务可能刚启动，请再试一次（免费层唤醒需要30秒）';
+      errorMsg = '请求超时，后端可能刚启动，请再试一次（唤醒需30–60秒）';
     } else if (err.response) {
       errorMsg = err.response.data?.message || err.response.statusText || '后端返回错误 ' + err.response.status;
     } else if (err.request) {
-      errorMsg = '网络连接失败，可能后端服务休眠或网络问题，请再试一次';
+      errorMsg = '网络连接失败，后端服务可能休眠或网络问题，请再试一次';
     } else {
       errorMsg = err.message || '请求发送失败';
     }
