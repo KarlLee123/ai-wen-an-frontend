@@ -64,7 +64,7 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    // 使用稳定代理解决 HTTPS 前端调用 HTTP 后端的问题
+    // 使用稳定代理解决 Mixed Content 和 CORS 问题
     const targetUrl = 'http://175.24.207.152:8080/chat'
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
 
