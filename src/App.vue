@@ -13,11 +13,11 @@
       <div class="style-select">
         <span>风格：</span>
         <el-select v-model="selectedStyle" placeholder="选择风格">
-          <el-option label="默认（自然亲切）" value="默认（自然亲切）" />
-          <el-option label="温柔治愈风" value="温柔治愈风" />
-          <el-option label="毒舌搞笑风" value="毒舌搞笑风" />
-          <el-option label="专业干货风" value="专业干货风" />
-          <el-option label="日式冷幽默风" value="日式冷幽默风" />
+          <el-option label="默认（自然亲切）" value="自然亲切" />
+          <el-option label="温柔治愈" value="温柔治愈" />
+          <el-option label="毒舌吐槽" value="毒舌吐槽" />
+          <el-option label="专业干货" value="专业干货" />
+          <el-option label="日式冷幽默" value="日式冷幽默" />
         </el-select>
       </div>
 
@@ -47,11 +47,11 @@ import { ref } from 'vue'
 import axios from 'axios'
 
 const theme = ref('')
-const selectedStyle = ref('默认（自然亲切）')
+const selectedStyle = ref('自然亲切')
 const result = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
-const remaining = ref(3)  // 假设从后端取，这里先硬编码
+const remaining = ref(3)
 
 const generateWenAn = async () => {
   if (!theme.value.trim()) {
@@ -64,36 +64,36 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    console.log('[DEBUG] 按钮点击 → 开始请求腾讯云后端')
-    console.log('[DEBUG] 当前主题:', theme.value)
-    console.log('[DEBUG] 选择的风格:', selectedStyle.value)
-
-    // 本地开发：用 /api/chat 走 vite proxy → 转发到腾讯云
-    const response = await axios.post('http://175.24.207.152:8080/chat', {
-  message: theme.value.trim(),
-  style: selectedStyle.value,
-  mode: 'wenan'
-});
-      // 如果后端实际字段是 message / content / mode，改成：
-      // message: theme.value.trim(),
-      // mode: selectedStyle.value
+    console.log('发送请求到 /chat，参数：', {
+      message: theme.value.trim(),
+      style: selectedStyle.value,
+      mode: 'wenan'
     })
 
-    console.log('[DEBUG] 后端返回完整数据:', response.data)
+    const response = await axios.post('/chat', {
+      message: theme.value.trim(),
+      style: selectedStyle.value,
+      mode: 'wenan'
+    })
 
-    // 解析返回（按你后端实际字段改）
-    result.value = response.data.content ||
-                   response.data.text ||
-                   response.data.reply ||
-                   response.data.message ||
-                   JSON.stringify(response.data, null, 2)
+    console.log('后端返回：', response.data)
 
+    if (response.data.error) {
+      errorMsg.value = response.data.error
+      remaining.value = response.data.remaining || 0
+    } else {
+      result.value = response.data.reply || '生成成功'
+      remaining.value = response.data.remaining || 3
+    }
   } catch (error) {
-    console.error('[ERROR] 请求失败详情:', error)
+    console.error('请求失败：', error)
     let msg = '生成失败：'
-    if (error.message) msg += error.message
-    if (error.code) msg += ` (code: ${error.code})`
-    if (error.response) msg += ` (状态码: ${error.response.status})`
+    if (error.response) {
+      msg += `状态 ${error.response.status}`
+      if (error.response.data?.error) msg += ` - ${error.response.data.error}`
+    } else {
+      msg += error.message || '网络错误'
+    }
     errorMsg.value = msg
   } finally {
     loading.value = false
@@ -102,11 +102,11 @@ const generateWenAn = async () => {
 </script>
 
 <style scoped>
-.container { max-width: 800px; margin: 40px auto; padding: 20px; font-family: Arial, sans-serif; }
+.container { max-width: 800px; margin: 40px auto; padding: 20px; }
 .input-area { margin-bottom: 30px; }
 .style-select { margin: 20px 0; display: flex; align-items: center; gap: 10px; }
-.remaining { margin-top: 10px; color: #666; font-size: 14px; }
+.remaining { margin-top: 10px; color: #666; }
 .result { margin-top: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #f9f9f9; }
-.error { color: red; margin: 15px 0; }
+.error { color: red; margin: 15px 0; font-weight: bold; }
 pre { white-space: pre-wrap; word-break: break-all; }
 </style>
