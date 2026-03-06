@@ -64,14 +64,17 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://175.24.207.152:8080'
-    console.log('请求地址：' + apiUrl + '/chat')
+    // 使用稳定代理解决 HTTPS 前端调用 HTTP 后端的问题
+    const targetUrl = 'http://175.24.207.152:8080/chat'
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
 
-   const response = await axios.post('https://corsproxy.io/?http://175.24.207.152:8080/chat', {
-  message: theme.value.trim(),
-  style: selectedStyle.value,
-  mode: 'wenan'
-});
+    console.log('使用代理请求：', proxyUrl)
+
+    const response = await axios.post(proxyUrl, {
+      message: theme.value.trim(),
+      style: selectedStyle.value,
+      mode: 'wenan'
+    })
 
     console.log('后端返回：', response.data)
 
@@ -84,7 +87,7 @@ const generateWenAn = async () => {
     }
   } catch (error) {
     console.error('请求失败：', error)
-    errorMsg.value = '生成失败：' + (error.response ? error.response.status : error.message)
+    errorMsg.value = '生成失败：' + (error.message || '网络错误')
   } finally {
     loading.value = false
   }
