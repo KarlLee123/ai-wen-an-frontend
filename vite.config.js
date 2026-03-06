@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -11,7 +10,7 @@ export default defineConfig({
         target: 'http://175.24.207.152:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path  // 不改路径，/chat → /chat
+        rewrite: (path) => path
       }
     }
   }
