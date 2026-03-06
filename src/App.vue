@@ -67,11 +67,11 @@ const generateWenAn = async () => {
     const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://175.24.207.152:8080'
     console.log('请求地址：' + apiUrl + '/chat')
 
-    const response = await axios.post(`${apiUrl}/chat`, {
-      message: theme.value.trim(),
-      style: selectedStyle.value,
-      mode: 'wenan'
-    })
+   const response = await axios.post('https://corsproxy.io/?http://175.24.207.152:8080/chat', {
+  message: theme.value.trim(),
+  style: selectedStyle.value,
+  mode: 'wenan'
+});
 
     console.log('后端返回：', response.data)
 
