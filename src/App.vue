@@ -69,9 +69,11 @@ const generateWenAn = async () => {
     console.log('[DEBUG] 选择的风格:', selectedStyle.value)
 
     // 本地开发：用 /api/chat 走 vite proxy → 转发到腾讯云
-    const response = await axios.post('/api/chat', {
-      prompt: theme.value.trim(),
-      style: selectedStyle.value
+    const response = await axios.post('http://175.24.207.152:8080/chat', {
+  message: theme.value.trim(),
+  style: selectedStyle.value,
+  mode: 'wenan'
+});
       // 如果后端实际字段是 message / content / mode，改成：
       // message: theme.value.trim(),
       // mode: selectedStyle.value
