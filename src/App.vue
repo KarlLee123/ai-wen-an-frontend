@@ -64,13 +64,10 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    console.log('发送请求到 /chat，参数：', {
-      message: theme.value.trim(),
-      style: selectedStyle.value,
-      mode: 'wenan'
-    })
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://175.24.207.152:8080'
+    console.log('请求地址：' + apiUrl + '/chat')
 
-    const response = await axios.post('/chat', {
+    const response = await axios.post(`${apiUrl}/chat`, {
       message: theme.value.trim(),
       style: selectedStyle.value,
       mode: 'wenan'
@@ -87,14 +84,7 @@ const generateWenAn = async () => {
     }
   } catch (error) {
     console.error('请求失败：', error)
-    let msg = '生成失败：'
-    if (error.response) {
-      msg += `状态 ${error.response.status}`
-      if (error.response.data?.error) msg += ` - ${error.response.data.error}`
-    } else {
-      msg += error.message || '网络错误'
-    }
-    errorMsg.value = msg
+    errorMsg.value = '生成失败：' + (error.response ? error.response.status : error.message)
   } finally {
     loading.value = false
   }
