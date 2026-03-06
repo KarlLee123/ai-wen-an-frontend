@@ -64,9 +64,9 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    // 使用稳定的免费 CORS 代理（临时方案，解决 Mixed Content）
+    // 使用稳定代理解决 HTTPS 前端调用 HTTP 后端的问题
     const targetUrl = 'http://175.24.207.152:8080/chat'
-    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl)
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
 
     console.log('使用代理请求：', proxyUrl)
 
@@ -88,9 +88,6 @@ const generateWenAn = async () => {
   } catch (error) {
     console.error('请求失败：', error)
     errorMsg.value = '生成失败：' + (error.message || '网络错误')
-    if (error.response) {
-      errorMsg.value += ` (状态: ${error.response.status})`
-    }
   } finally {
     loading.value = false
   }
@@ -105,4 +102,4 @@ const generateWenAn = async () => {
 .result { margin-top: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #f9f9f9; }
 .error { color: red; margin: 15px 0; font-weight: bold; }
 pre { white-space: pre-wrap; word-break: break-all; }
-</style>>
+</style>
