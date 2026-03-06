@@ -9,6 +9,7 @@
         type="textarea"
         :rows="4"
       />
+
       <div class="style-select">
         <span>风格：</span>
         <el-select v-model="selectedStyle" placeholder="选择风格">
@@ -19,6 +20,7 @@
           <el-option label="日式冷幽默" value="日式冷幽默" />
         </el-select>
       </div>
+
       <el-button
         type="primary"
         @click="generateWenAn"
@@ -27,10 +29,12 @@
       >
         {{ loading ? '生成中...' : '一键生成' }}
       </el-button>
+
       <div class="remaining">剩余免费次数：{{ remaining }} 次</div>
     </div>
 
     <div v-if="errorMsg" class="error">{{ errorMsg }}</div>
+
     <div v-if="result" class="result">
       <h3>生成结果：</h3>
       <pre>{{ result }}</pre>
@@ -49,9 +53,6 @@ const loading = ref(false)
 const errorMsg = ref('')
 const remaining = ref(3)
 
-// 生产环境使用 VITE_API_BASE_URL，本地开发使用 proxy
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
-
 const generateWenAn = async () => {
   if (!theme.value.trim()) {
     errorMsg.value = '请输入主题内容！'
@@ -63,10 +64,13 @@ const generateWenAn = async () => {
   result.value = ''
 
   try {
-    const url = apiBaseUrl ? `${apiBaseUrl}/chat` : '/chat'
-    console.log('请求地址：', url)
+    // 使用稳定的免费 CORS 代理（临时方案，解决 Mixed Content）
+    const targetUrl = 'http://175.24.207.152:8080/chat'
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl)
 
-    const response = await axios.post(url, {
+    console.log('使用代理请求：', proxyUrl)
+
+    const response = await axios.post(proxyUrl, {
       message: theme.value.trim(),
       style: selectedStyle.value,
       mode: 'wenan'
@@ -83,14 +87,10 @@ const generateWenAn = async () => {
     }
   } catch (error) {
     console.error('请求失败：', error)
-    let msg = '生成失败：'
+    errorMsg.value = '生成失败：' + (error.message || '网络错误')
     if (error.response) {
-      msg += `状态 ${error.response.status}`
-      if (error.response.data?.error) msg += ` - ${error.response.data.error}`
-    } else {
-      msg += error.message || '网络错误'
+      errorMsg.value += ` (状态: ${error.response.status})`
     }
-    errorMsg.value = msg
   } finally {
     loading.value = false
   }
@@ -105,4 +105,4 @@ const generateWenAn = async () => {
 .result { margin-top: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #f9f9f9; }
 .error { color: red; margin: 15px 0; font-weight: bold; }
 pre { white-space: pre-wrap; word-break: break-all; }
-</style>
+</style>>
